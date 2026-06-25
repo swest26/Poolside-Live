@@ -1,0 +1,149 @@
+{
+  "app_name": "Poolside Live",
+  "personality": "5 Brutalist Mobile",
+  "personality_one_liner": "A stark, high-contrast, industrial command center built for maximum legibility in blinding poolside sunlight.",
+  "color": {
+    "surface": "#FFFFFF",
+    "onSurface": "#000000",
+    "surfaceSecondary": "#F4F4F5",
+    "onSurfaceSecondary": "#09090B",
+    "surfaceTertiary": "#E4E4E7",
+    "onSurfaceTertiary": "#18181B",
+    "surfaceInverse": "#000000",
+    "onSurfaceInverse": "#FFFFFF",
+    "brand": "#FF3B30",
+    "brandPrimary": "#FF3B30",
+    "onBrandPrimary": "#FFFFFF",
+    "brandSecondary": "#000000",
+    "onBrandSecondary": "#FFFFFF",
+    "brandTertiary": "#FFE5E3",
+    "onBrandTertiary": "#CC1C12",
+    "success": "#34C759",
+    "onSuccess": "#FFFFFF",
+    "warning": "#FFCC00",
+    "onWarning": "#000000",
+    "error": "#FF3B30",
+    "onError": "#FFFFFF",
+    "info": "#E4E4E7",
+    "onInfo": "#000000",
+    "border": "#000000",
+    "borderStrong": "#000000",
+    "divider": "#000000"
+  },
+  "typography": {
+    "displayFontFamily": "Bebas Neue",
+    "textFontFamily": "Space Grotesk",
+    "scale": {
+      "sm": 12,
+      "base": 14,
+      "lg": 16,
+      "xl": 20,
+      "2xl": 24,
+      "3xl": 48
+    }
+  },
+  "spacing": {
+    "rule": "Hard alignment, exposed structure. Use thick dividers (2pt) instead of margins to separate rows.",
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "2xl": 32,
+    "3xl": 48
+  },
+  "radius_tokens": {
+    "sm": 0,
+    "md": 0,
+    "lg": 0,
+    "pill": 0
+  },
+  "shadow_tier": "0",
+  "navigation": "stack_only",
+  "icon_set": "Phosphor",
+  "glassmorphism": {
+    "enabled": "false",
+    "do's": [],
+    "dont's": [
+      "No glass anywhere. Use solid #FFFFFF or #000000 for sticky headers."
+    ]
+  },
+  "platform_libraries": {
+    "glass": {
+      "ios": "expo-blur",
+      "android": "expo-blur",
+      "low_end_android_fallback": "solid surfaceSecondary"
+    },
+    "image": "expo-image",
+    "blur": "expo-blur",
+    "bottom_sheet": "@gorhom/bottom-sheet",
+    "animation": "react-native-reanimated",
+    "gesture": "react-native-gesture-handler"
+  },
+  "screens": [
+    {
+      "name": "LiveMeet",
+      "purpose": "Parents view live race progress (current + next 2) and scan QR to join.",
+      "states": {
+        "loading": "Centered black spinner.",
+        "empty": "Illustration of pool lanes + 'Scan QR to join a meet' text + solid black CTA.",
+        "error": "Readable bold message + Retry button."
+      },
+      "layout": "Header with 'JOIN MEET' QR scanner button. Below, the CURRENT RACE dominates the top half (black background, white text, red accents). Below it, a thick 2pt divider, then the next 2 upcoming races as list rows (white background, black text). Favorited events have an inverted color tag or thick border."
+    },
+    {
+      "name": "QRScanner",
+      "purpose": "Full-screen camera for parents to scan meet QR code.",
+      "states": {
+        "loading": "Camera initializing",
+        "empty": "Camera preview",
+        "error": "Camera access denied, show retry."
+      },
+      "layout": "Camera view filling screen. Top back button. Sharp, unrounded square overlay in the center to guide scanning."
+    },
+    {
+      "name": "OrganizerSetup",
+      "purpose": "Passcode entry and event list upload/paste.",
+      "states": {
+        "loading": "Checking passcode...",
+        "empty": "Input field for passcode",
+        "error": "Invalid passcode banner"
+      },
+      "layout": "Oversized typography for passcode input. Once authenticated, a huge raw text area to paste event list, and a solid black 'START MEET' button at the bottom."
+    },
+    {
+      "name": "OrganizerControlPanel",
+      "purpose": "Organizers tap to advance the current race and display QR code for parents.",
+      "states": {
+        "loading": "Updating heat...",
+        "empty": "No events loaded.",
+        "error": "Network error, retry."
+      },
+      "layout": "Top section: giant QR code for parents to scan. Middle section: Current race info in huge text. Bottom sticky CTA: Giant edge-to-edge signal red button 'ADVANCE TO NEXT RACE'. Hard mechanical interactions."
+    }
+  ],
+  "images": {
+    "hero_poolside": {
+      "url": "https://images.unsplash.com/photo-1779831910049-43e9ae3c7dc6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjh8MHwxfHNlYXJjaHwxfHxzd2ltJTIwbWVldCUyMHN0YXJ0aW5nJTIwYmxvY2t8ZW58MHx8fHwxNzgyNDI0NzgwfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Swimmers poised on starting blocks before a race"
+    },
+    "empty_pool_lanes": {
+      "url": "https://images.unsplash.com/photo-1558617320-e695f0d420de?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjh8MHwxfHNlYXJjaHwxfHxzd2ltbWluZyUyMHBvb2wlMjBsYW5lJTIwbGluZXMlMjB0ZXh0dXJlfGVufDB8fHx8MTc4MjQyNDc4MHww&ixlib=rb-4.1.0&q=85",
+      "alt": "Swimming pool lane lines texture"
+    },
+    "heat_number": {
+      "url": "https://images.unsplash.com/photo-1543168449-582b8edc70a6?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzMjh8MHwxfHNlYXJjaHwzfHxzd2ltJTIwbWVldCUyMHN0YXJ0aW5nJTIwYmxvY2t8ZW58MHx8fHwxNzgyNDI0NzgwfDA&ixlib=rb-4.1.0&q=85",
+      "alt": "Number 8 on pool"
+    }
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the Brutalist Mobile Light personality (0 radius, 2pt borders, high contrast stark white and hard black).",
+    "Use Bebas Neue for all the large numeric data like Event and Heat numbers, make them massive (at least 3xl/48px or more) so they are readable in bright sunlight from an arm's length.",
+    "Do NOT use glassmorphism or blur anywhere in the app. Use solid black or stark white for overlays/sticky elements.",
+    "For the current race card, invert the colors (black background, white text) to give it maximum hierarchy. Next races should have white background, black text.",
+    "Favorited events should be highlighted with a sharp, raw UI element—like a bright Signal Red (#FF3B30) solid tag with white text saying 'FAVORITE', and a thicker 2pt border.",
+    "The Organizer Control Panel must have an unmissable, full-width, edge-to-edge sticky 'ADVANCE TO NEXT RACE' button at the bottom.",
+    "Ensure safe area is respected, but let borders run edge-to-edge horizontally to divide lists.",
+    "Implement 'color flip' (instant color inversion) on press for buttons and list items instead of standard opacity/scale animations, matching brutalist interaction patterns."
+  ]
+}
