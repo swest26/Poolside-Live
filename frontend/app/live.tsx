@@ -23,8 +23,10 @@ export default function Live() {
   const [error, setError] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [favs, setFavs] = useState<string[]>([]);
+  const [dismissed, setDismissed] = useState<string[]>([]);
 
   const favKey = `favs_${code}`;
+  const dismissKey = `dismissed_${code}`;
 
   const load = useCallback(async () => {
     if (!code) return;
@@ -48,8 +50,20 @@ export default function Live() {
       } catch {
         setFavs([]);
       }
+      const storedD = await storage.getItem<string>(dismissKey, "[]");
+      try {
+        setDismissed(JSON.parse(storedD || "[]"));
+      } catch {
+        setDismissed([]);
+      }
     })();
-  }, [favKey]);
+  }, [favKey, dismissKey]);
+
+  const dismissMessage = async (msgId: string) => {
+    const next = [...dismissed, msgId];
+    setDismissed(next);
+    await storage.setItem(dismissKey, JSON.stringify(next));
+  };
 
   useEffect(() => {
     load();
@@ -115,14 +129,20 @@ export default function Live() {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.onSurface} />}
       >
         {/* Announcements */}
-        {meet.messages && meet.messages.length > 0 && (
+        {meet.messages && meet.messages.filter((m) => !dismissed.includes(m.id)).length > 0 && (
           <View style={styles.announceWrap} testID="live-announcements">
-            {meet.messages.slice(0, 3).map((m, i) => (
-              <View key={m.id} style={[styles.announce, i === 0 && styles.announceLatest]} testID={`announcement-${m.id}`}>
-                <Ionicons name="megaphone" size={18} color={i === 0 ? colors.onBrand : colors.brand} />
-                <Text style={[styles.announceText, i === 0 && { color: colors.onBrand }]}>{m.text}</Text>
-              </View>
-            ))}
+            {meet.messages
+              .filter((m) => !dismissed.includes(m.id))
+              .slice(0, 3)
+              .map((m, i) => (
+                <View key={m.id} style={[styles.announce, i === 0 && styles.announceLatest]} testID={`announcement-${m.id}`}>
+                  <Ionicons name="megaphone" size={18} color={i === 0 ? colors.onBrand : colors.brand} />
+                  <Text style={[styles.announceText, i === 0 && { color: colors.onBrand }]}>{m.text}</Text>
+                  <Pressable testID={`dismiss-announcement-${m.id}`} onPress={() => dismissMessage(m.id)} hitSlop={10}>
+                    <Ionicons name="close" size={18} color={i === 0 ? colors.onBrand : colors.brand} />
+                  </Pressable>
+                </View>
+              ))}
           </View>
         )}
 

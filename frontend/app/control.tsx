@@ -13,6 +13,7 @@ import {
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import * as Clipboard from "expo-clipboard";
 import QRCode from "react-native-qrcode-svg";
 import { colors, spacing, fonts, type } from "@/src/theme";
 import { advanceMeet, previousMeet, readMeet, sendMessage, Meet, Race } from "@/src/api";
@@ -26,6 +27,9 @@ export default function Control() {
   const [error, setError] = useState("");
   const [msgText, setMsgText] = useState("");
   const [sending, setSending] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const shareLink = (code: string) => `${process.env.EXPO_PUBLIC_BACKEND_URL}/live?code=${code}`;
 
   const onSendMessage = async () => {
     if (!meet || !msgText.trim() || sending) return;
@@ -90,9 +94,18 @@ export default function Control() {
 
   const onShare = () => {
     if (!meet) return;
+    const link = shareLink(meet.code);
     Share.share({
-      message: `Follow "${meet.name}" live! Open Poolside Live and enter code: ${meet.code}`,
+      message: `Follow "${meet.name}" live on Poolside Live!\n\nTap to open: ${link}\n\nOr enter code: ${meet.code}`,
     });
+  };
+
+  const onCopyLink = async () => {
+    if (!meet) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    await Clipboard.setStringAsync(shareLink(meet.code));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   if (loading) {
@@ -144,10 +157,16 @@ export default function Control() {
           <View style={styles.qrInfo}>
             <Text style={styles.qrLabel}>PARENTS SCAN OR ENTER</Text>
             <Text style={styles.qrCode} testID="meet-code-display">{meet.code}</Text>
-            <Pressable testID="share-button" style={styles.shareBtn} onPress={onShare}>
-              <Ionicons name="share-outline" size={16} color={colors.onBrand} />
-              <Text style={styles.shareText}>SHARE</Text>
-            </Pressable>
+            <View style={styles.shareRow}>
+              <Pressable testID="share-button" style={styles.shareBtn} onPress={onShare}>
+                <Ionicons name="share-outline" size={16} color={colors.onBrand} />
+                <Text style={styles.shareText}>SHARE</Text>
+              </Pressable>
+              <Pressable testID="copy-link-button" style={styles.copyBtn} onPress={onCopyLink}>
+                <Ionicons name={copied ? "checkmark" : "link-outline"} size={16} color={colors.onSurface} />
+                <Text style={styles.copyText}>{copied ? "COPIED!" : "COPY LINK"}</Text>
+              </Pressable>
+            </View>
           </View>
         </View>
 
@@ -272,8 +291,11 @@ const styles = StyleSheet.create({
   qrInfo: { flex: 1, padding: spacing.md, gap: spacing.xs, alignItems: "flex-start" },
   qrLabel: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.muted, letterSpacing: 1 },
   qrCode: { fontFamily: fonts.display, fontSize: type.xl3, color: colors.onSurface, letterSpacing: 2, lineHeight: type.xl3 },
-  shareBtn: { flexDirection: "row", alignItems: "center", gap: spacing.xs, backgroundColor: colors.brand, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, marginTop: spacing.xs },
+  shareRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, marginTop: spacing.xs },
+  shareBtn: { flexDirection: "row", alignItems: "center", gap: spacing.xs, backgroundColor: colors.brand, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   shareText: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.onBrand, letterSpacing: 1 },
+  copyBtn: { flexDirection: "row", alignItems: "center", gap: spacing.xs, borderWidth: 2, borderColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
+  copyText: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.onSurface, letterSpacing: 1 },
   sectionLabel: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.muted, letterSpacing: 2 },
   currentCard: { backgroundColor: colors.inverse, borderWidth: 2, borderColor: colors.border, padding: spacing.lg },
   progress: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.brand, letterSpacing: 2 },

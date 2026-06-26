@@ -139,3 +139,60 @@ class TestUpdateEvents:
             json={"passcode": "nope", "events_text": "1|x|1"},
         )
         assert r.status_code == 401
+
+
+
+# ---------- Messages / Announcements ----------
+class TestMessages:
+    def test_send_message_returns_newest_first_and_includes_id(self, created_meet):
+        meet_id = created_meet["id"]
+        # Send first message
+        r1 = requests.post(
+            f"{API}/meets/{meet_id}/messages",
+            json={"passcode": "swim123", "text": "TEST_FIRST announcement"},
+        )
+        assert r1.status_code == 200, r1.text
+        d1 = r1.json()
+        assert len(d1["messages"]) >= 1
+        assert d1["messages"][0]["text"] == "TEST_FIRST announcement"
+        assert "id" in d1["messages"][0] and d1["messages"][0]["id"]
+        assert "created_at" in d1["messages"][0]
+
+        # Send second message
+        r2 = requests.post(
+            f"{API}/meets/{meet_id}/messages",
+            json={"passcode": "swim123", "text": "TEST_SECOND announcement"},
+        )
+        assert r2.status_code == 200
+        d2 = r2.json()
+        # Newest-first ordering: SECOND must come before FIRST
+        assert d2["messages"][0]["text"] == "TEST_SECOND announcement"
+        assert d2["messages"][1]["text"] == "TEST_FIRST announcement"
+
+    def test_public_get_exposes_messages_without_passcode(self, created_meet):
+        r = requests.get(f"{API}/meets/{created_meet['code']}")
+        assert r.status_code == 200
+        data = r.json()
+        assert "passcode" not in data
+        assert isinstance(data.get("messages"), list)
+        assert len(data["messages"]) >= 2
+        # Verify message shape (id required for dismiss-by-id on frontend)
+        m = data["messages"][0]
+        assert "id" in m and m["id"]
+        assert "text" in m
+        # Newest-first preserved on public read
+        assert data["messages"][0]["text"] == "TEST_SECOND announcement"
+
+    def test_send_message_wrong_passcode_401(self, created_meet):
+        r = requests.post(
+            f"{API}/meets/{created_meet['id']}/messages",
+            json={"passcode": "nope", "text": "should fail"},
+        )
+        assert r.status_code == 401
+
+    def test_send_empty_message_400(self, created_meet):
+        r = requests.post(
+            f"{API}/meets/{created_meet['id']}/messages",
+            json={"passcode": "swim123", "text": "   "},
+        )
+        assert r.status_code == 400
