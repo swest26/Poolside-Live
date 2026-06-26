@@ -12,7 +12,7 @@ export default function Home() {
       <View style={styles.container}>
         <View style={styles.header}>
           <View style={styles.logoRow}>
-            <Ionicons name="water" size={34} color={colors.brand} />
+            <Ionicons name="water" size={34} color={colors.accentBlue} />
             <Text style={styles.logo}>POOLSIDE LIVE</Text>
           </View>
           <Text style={styles.tagline}>REAL-TIME SWIM MEET RACE BOARD</Text>
@@ -39,19 +39,21 @@ export default function Home() {
 
           <Pressable
             testID="organizer-button"
-            style={({ pressed }) => [styles.bigBtn, styles.btnLight, pressed && styles.pressedBrand]}
+            style={({ pressed }) => [styles.compactBtn, styles.btnLight, pressed && styles.pressedBrand]}
             onPress={() => router.push("/organizer")}
           >
             {({ pressed }) => (
-              <>
-                <Ionicons name="settings-sharp" size={40} color={pressed ? colors.onBrand : colors.onSurface} />
-                <Text style={[styles.bigBtnTitle, { color: pressed ? colors.onBrand : colors.onSurface }]}>
-                  ORGANIZER
-                </Text>
-                <Text style={[styles.bigBtnSub, { color: pressed ? colors.brandTertiary : colors.muted }]}>
-                  Run a meet · control races
-                </Text>
-              </>
+              <View style={styles.compactRow}>
+                <Ionicons name="settings-sharp" size={28} color={pressed ? colors.onBrand : colors.onSurface} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.compactTitle, { color: pressed ? colors.onBrand : colors.onSurface }]}>
+                    ORGANIZER
+                  </Text>
+                  <Text style={[styles.bigBtnSub, { color: pressed ? colors.brandTertiary : colors.muted }]}>
+                    Run a meet · control races
+                  </Text>
+                </View>
+              </View>
             )}
           </Pressable>
         </View>
@@ -89,6 +91,15 @@ const styles = StyleSheet.create({
   pressedBrand: { backgroundColor: colors.brand },
   bigBtnTitle: { fontFamily: fonts.display, fontSize: type.xl3, lineHeight: type.xl3 },
   bigBtnSub: { fontFamily: fonts.body, fontSize: type.base },
+  compactBtn: {
+    borderWidth: 2,
+    borderColor: colors.border,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    justifyContent: "center",
+  },
+  compactRow: { flexDirection: "row", alignItems: "center", gap: spacing.md },
+  compactTitle: { fontFamily: fonts.display, fontSize: type.xl2, lineHeight: type.xl2 + 2 },
   codeLink: { paddingVertical: spacing.xl, alignItems: "center" },
   codeLinkText: { fontFamily: fonts.bold, fontSize: type.base, color: colors.onSurface, textDecorationLine: "underline" },
 });

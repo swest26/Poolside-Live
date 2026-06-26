@@ -1,0 +1,34 @@
+{
+  "summary": "Tested all three new items (compact ORGANIZER box, blue water-drop icon, NEW per-meet live viewer counter) plus full regression. Backend: 26/26 pytest tests pass — added a new TestHeartbeat class with 4 tests covering (a) POST /api/meets/{code}/heartbeat returns {viewers:N} and increments only for distinct viewer_ids (same viewer_id is idempotent), (b) GET /api/meets/id/{id}/read now includes live_viewers reflecting active heartbeats and still does NOT leak passcode, (c) unknown code → 404, (d) lowercase code is accepted. Frontend (mobile viewport 375x667): Home screen renders blue water-drop icon (#colors.accentBlue) and ORGANIZER box is ~39% the height of JOIN A MEET (70px vs 179px) — well under half. Live view (/live?code=Q928K3): on open it fires a heartbeat POST immediately and another every 5s (observed 2 heartbeat requests in ~7s) and the viewer_id is persisted in storage as 'viewer_id'. Two distinct browser contexts opening the live page → backend /read reports live_viewers=2. Control panel (/control?id=...&passcode=swim123): the testID 'live-viewers' element shows '2 WATCHING NOW' and updates via the 5s polling. COPY LINK toggles to 'COPIED!' on tap; SHARE button still present; SEND ANNOUNCEMENT broadcast appears on the parent live banner; dismiss-announcement-{id} removes the message from view; ADVANCE moved current_index 0→1 and PREVIOUS returned it to 0. No new react-native issues introduced; the pre-existing SafeAreaView deprecation warning from earlier iterations is still present but non-blocking.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "SafeAreaView (react-native core)", "issue": "Pre-existing console warning 'SafeAreaView has been deprecated, use react-native-safe-area-context'. Used in /app/frontend/app/live.tsx:7 and /app/frontend/app/control.tsx:7. Not blocking — carried over from iteration 1/2."}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_meets.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [
+    "Optional cleanup (non-blocking): migrate SafeAreaView imports to 'react-native-safe-area-context' in live.tsx and control.tsx to silence the deprecation warning."
+  ],
+  "critical_code_review_comments": [
+    "server.py viewer counter is correctly in-memory with 30s TTL and lazy GC inside count_viewers() — matches the 'rough count' spec; same viewer_id re-pings update timestamp without inflating count (verified).",
+    "server.py: GET /meets/id/{id}/read uses public_meet() so passcode is stripped before adding live_viewers — no passcode leak (verified by test).",
+    "live.tsx heartbeat effect generates a stable per-device viewer_id stored under storage key 'viewer_id' and re-uses it on subsequent visits; ping interval is 5s and is cleared on unmount — correct.",
+    "control.tsx renders meet.live_viewers ?? 0 inside the testID='live-viewers' element and is refreshed by the 5s readMeet polling already in place — no extra polling needed.",
+    "index.tsx uses colors.accentBlue for the water icon and a new compactBtn style (paddingVertical: spacing.md) — measured at ~39% of the JOIN A MEET tile height on a 375x667 viewport."
+  ],
+  "updated_files": [
+    "/app/backend/tests/test_meets.py (added TestHeartbeat class with 4 tests)",
+    "/app/test_reports/iteration_3.json",
+    "/app/test_reports/pytest/pytest_results.xml (regenerated)"
+  ],
+  "success_rate": {"backend": "100% (26/26 pytest)", "frontend": "100% of tested flows (home layout, blue icon, heartbeat fires, 2 distinct viewers -> live_viewers=2, control 'N WATCHING NOW' updates, copy/share, send announcement propagates, dismiss persists, advance/previous)"},
+  "seed_data_creation": "Used existing meet Q928K3 (id d7ff6a59-12a0-49e8-b154-f25409ebfdf6, passcode swim123). pytest creates additional TEST_-prefixed meets per run; heartbeat tests use TEST_v* viewer_ids that auto-expire after 30s TTL in memory.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run backend tests: `export $(grep -v '^#' /app/frontend/.env | xargs) && pytest /app/backend/tests/test_meets.py -v` — all 26 pass. Viewer counter is in-memory on the backend (resets on server restart, 30s TTL) — intentional. To force live_viewers>0 send 1+ heartbeat POSTs with distinct viewer_id values, then GET /api/meets/id/{id}/read. Opening /live?code=CODE automatically fires a heartbeat immediately and every 5s. Control panel testID 'live-viewers' is the element to assert against. Sample meet code Q928K3 / id d7ff6a59-12a0-49e8-b154-f25409ebfdf6 / passcode swim123 remains valid.",
+  "rca_of_issue": "N/A — no bugs found in this iteration."
+}

@@ -12,7 +12,7 @@ import {
 import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, fonts, type } from "@/src/theme";
-import { getMeet, Meet, Race } from "@/src/api";
+import { getMeet, heartbeat, Meet, Race } from "@/src/api";
 import { storage } from "@/src/utils/storage";
 
 export default function Live() {
@@ -64,6 +64,26 @@ export default function Live() {
     setDismissed(next);
     await storage.setItem(dismissKey, JSON.stringify(next));
   };
+
+  // Live presence heartbeat so organizers can see how many parents are watching.
+  useEffect(() => {
+    if (!code) return;
+    let viewerId = "";
+    let timer: ReturnType<typeof setInterval> | undefined;
+    (async () => {
+      viewerId = (await storage.getItem<string>("viewer_id", "")) || "";
+      if (!viewerId) {
+        viewerId = `v_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+        await storage.setItem("viewer_id", viewerId);
+      }
+      const ping = () => heartbeat(code, viewerId).catch(() => {});
+      ping();
+      timer = setInterval(ping, 5000);
+    })();
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [code]);
 
   useEffect(() => {
     load();

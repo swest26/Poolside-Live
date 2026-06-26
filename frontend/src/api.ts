@@ -22,6 +22,7 @@ export type Meet = {
   races: Race[];
   current_index: number;
   messages: Message[];
+  live_viewers?: number;
   created_at: string;
 };
 
@@ -56,6 +57,15 @@ export async function sendMessage(id: string, passcode: string, text: string): P
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ passcode, text }),
+  });
+  return handle(res);
+}
+
+export async function heartbeat(code: string, viewerId: string): Promise<{ viewers: number }> {
+  const res = await fetch(`${BASE}/meets/${code.toUpperCase()}/heartbeat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ viewer_id: viewerId }),
   });
   return handle(res);
 }

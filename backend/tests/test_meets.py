@@ -196,3 +196,56 @@ class TestMessages:
             json={"passcode": "swim123", "text": "   "},
         )
         assert r.status_code == 400
+
+
+# ---------- Live viewer heartbeat ----------
+class TestHeartbeat:
+    def test_heartbeat_unknown_code_404(self):
+        r = requests.post(f"{API}/meets/ZZZZZZ/heartbeat", json={"viewer_id": "v1"})
+        assert r.status_code == 404
+
+    def test_heartbeat_returns_viewers_and_read_reflects(self, created_meet):
+        code = created_meet["code"]
+        meet_id = created_meet["id"]
+
+        # Use unique viewer ids per test run to avoid collision across modules
+        import time as _t
+        vid1 = f"TEST_v1_{int(_t.time()*1000)}"
+        vid2 = f"TEST_v2_{int(_t.time()*1000)}"
+
+        r1 = requests.post(f"{API}/meets/{code}/heartbeat", json={"viewer_id": vid1})
+        assert r1.status_code == 200, r1.text
+        body1 = r1.json()
+        assert "viewers" in body1
+        assert body1["viewers"] >= 1
+
+        r2 = requests.post(f"{API}/meets/{code}/heartbeat", json={"viewer_id": vid2})
+        assert r2.status_code == 200
+        body2 = r2.json()
+        assert body2["viewers"] >= 2
+
+        # Same viewer_id again should NOT add a new viewer
+        r3 = requests.post(f"{API}/meets/{code}/heartbeat", json={"viewer_id": vid1})
+        assert r3.status_code == 200
+        assert r3.json()["viewers"] >= 2
+
+        # GET by id read should reflect live_viewers
+        r4 = requests.get(f"{API}/meets/id/{meet_id}/read")
+        assert r4.status_code == 200
+        data = r4.json()
+        assert "live_viewers" in data
+        assert isinstance(data["live_viewers"], int)
+        assert data["live_viewers"] >= 2
+        # public read should NOT leak passcode
+        assert "passcode" not in data
+
+    def test_heartbeat_lowercase_code(self, created_meet):
+        code = created_meet["code"].lower()
+        r = requests.post(f"{API}/meets/{code}/heartbeat", json={"viewer_id": "TEST_vcase"})
+        assert r.status_code == 200
+        assert r.json()["viewers"] >= 1
+
+    def test_read_by_id_includes_live_viewers_key(self, created_meet):
+        r = requests.get(f"{API}/meets/id/{created_meet['id']}/read")
+        assert r.status_code == 200
+        assert "live_viewers" in r.json()

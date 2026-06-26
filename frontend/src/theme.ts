@@ -7,6 +7,7 @@ export const colors = {
   onInverse: "#FFFFFF",
   brand: "#FF3B30",
   onBrand: "#FFFFFF",
+  accentBlue: "#0A84FF",
   brandTertiary: "#FFE5E3",
   onBrandTertiary: "#CC1C12",
   success: "#34C759",

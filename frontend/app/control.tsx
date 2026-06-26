@@ -61,6 +61,8 @@ export default function Control() {
   useFocusEffect(
     useCallback(() => {
       load();
+      const t = setInterval(load, 5000);
+      return () => clearInterval(t);
     }, [load])
   );
 
@@ -166,6 +168,12 @@ export default function Control() {
                 <Ionicons name={copied ? "checkmark" : "link-outline"} size={16} color={colors.onSurface} />
                 <Text style={styles.copyText}>{copied ? "COPIED!" : "COPY LINK"}</Text>
               </Pressable>
+            </View>
+            <View style={styles.watchingRow}>
+              <Ionicons name="eye" size={14} color={colors.muted} />
+              <Text style={styles.watchingText} testID="live-viewers">
+                {meet.live_viewers ?? 0} WATCHING NOW
+              </Text>
             </View>
           </View>
         </View>
@@ -296,6 +304,8 @@ const styles = StyleSheet.create({
   shareText: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.onBrand, letterSpacing: 1 },
   copyBtn: { flexDirection: "row", alignItems: "center", gap: spacing.xs, borderWidth: 2, borderColor: colors.border, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   copyText: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.onSurface, letterSpacing: 1 },
+  watchingRow: { flexDirection: "row", alignItems: "center", gap: spacing.xs, marginTop: spacing.sm },
+  watchingText: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.muted, letterSpacing: 1 },
   sectionLabel: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.muted, letterSpacing: 2 },
   currentCard: { backgroundColor: colors.inverse, borderWidth: 2, borderColor: colors.border, padding: spacing.lg },
   progress: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.brand, letterSpacing: 2 },

@@ -4,6 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 import os
 import re
+import time
 import random
 import string
 import logging
@@ -75,6 +76,23 @@ class IndexBody(BaseModel):
 class MessageBody(BaseModel):
     passcode: str
     text: str
+
+
+class HeartbeatBody(BaseModel):
+    viewer_id: str
+
+
+# In-memory live-viewer tracker: { meet_id: { viewer_id: last_seen_epoch } }
+VIEWERS: dict = {}
+VIEWER_TTL = 30  # seconds
+
+
+def count_viewers(meet_id: str) -> int:
+    now = time.time()
+    bucket = VIEWERS.get(meet_id, {})
+    active = {k: v for k, v in bucket.items() if now - v < VIEWER_TTL}
+    VIEWERS[meet_id] = active
+    return len(active)
 
 
 # ---------- Helpers ----------
@@ -187,7 +205,16 @@ async def get_meet(code: str):
 @api_router.get("/meets/id/{meet_id}/read")
 async def read_meet_by_id(meet_id: str):
     meet = await get_meet_by_id_or_404(meet_id)
-    return public_meet(meet)
+    d = public_meet(meet)
+    d["live_viewers"] = count_viewers(meet_id)
+    return d
+
+
+@api_router.post("/meets/{code}/heartbeat")
+async def heartbeat(code: str, body: HeartbeatBody):
+    meet = await get_meet_or_404(code)
+    VIEWERS.setdefault(meet.id, {})[body.viewer_id] = time.time()
+    return {"viewers": count_viewers(meet.id)}
 
 
 @api_router.post("/meets/{code}/auth")
