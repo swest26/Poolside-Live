@@ -8,13 +8,14 @@ import {
   ScrollView,
   ActivityIndicator,
   Share,
+  TextInput,
 } from "react-native";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import QRCode from "react-native-qrcode-svg";
 import { colors, spacing, fonts, type } from "@/src/theme";
-import { advanceMeet, previousMeet, readMeet, Meet, Race } from "@/src/api";
+import { advanceMeet, previousMeet, readMeet, sendMessage, Meet, Race } from "@/src/api";
 
 export default function Control() {
   const router = useRouter();
@@ -23,6 +24,23 @@ export default function Control() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [msgText, setMsgText] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const onSendMessage = async () => {
+    if (!meet || !msgText.trim() || sending) return;
+    setSending(true);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      const updated = await sendMessage(meet.id, passcode!, msgText.trim());
+      setMeet(updated);
+      setMsgText("");
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setSending(false);
+    }
+  };
 
   const load = useCallback(async () => {
     try {
@@ -161,7 +179,45 @@ export default function Control() {
           </View>
         )}
 
+        {/* Announcements */}
+        <Text style={styles.sectionLabel}>SEND ANNOUNCEMENT</Text>
+        <View style={styles.msgComposer}>
+          <TextInput
+            testID="message-input"
+            value={msgText}
+            onChangeText={setMsgText}
+            placeholder="e.g. 10 min break after Event 13"
+            placeholderTextColor={colors.muted}
+            style={styles.msgInput}
+            multiline
+          />
+          <Pressable
+            testID="send-message-button"
+            style={({ pressed }) => [styles.sendBtn, pressed && { backgroundColor: colors.onSurface }]}
+            onPress={onSendMessage}
+            disabled={sending || !msgText.trim()}
+          >
+            {sending ? (
+              <ActivityIndicator color={colors.onBrand} />
+            ) : (
+              <Ionicons name="megaphone" size={22} color={colors.onBrand} />
+            )}
+          </Pressable>
+        </View>
+
+        {meet.messages.length > 0 && (
+          <View style={styles.msgList} testID="control-message-list">
+            {meet.messages.map((m) => (
+              <View key={m.id} style={styles.msgItem} testID={`message-${m.id}`}>
+                <Ionicons name="megaphone-outline" size={16} color={colors.brand} />
+                <Text style={styles.msgItemText}>{m.text}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {!!error && <Text testID="control-error" style={styles.errorText}>{error}</Text>}
+        <View style={{ height: spacing.lg }} />
       </ScrollView>
 
       {/* Sticky controls */}
@@ -231,6 +287,12 @@ const styles = StyleSheet.create({
   nextLabel: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.muted, letterSpacing: 2 },
   nextText: { fontFamily: fonts.bold, fontSize: type.lg, color: colors.onSurface },
   errorText: { fontFamily: fonts.body, fontSize: type.base, color: colors.brand },
+  msgComposer: { flexDirection: "row", borderWidth: 2, borderColor: colors.border },
+  msgInput: { flex: 1, fontFamily: fonts.body, fontSize: type.base, color: colors.onSurface, padding: spacing.md, minHeight: 48, maxHeight: 100 },
+  sendBtn: { width: 56, backgroundColor: colors.brand, alignItems: "center", justifyContent: "center", borderLeftWidth: 2, borderLeftColor: colors.border },
+  msgList: { gap: spacing.sm },
+  msgItem: { flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 2, borderColor: colors.border, padding: spacing.md, backgroundColor: colors.brandTertiary },
+  msgItemText: { flex: 1, fontFamily: fonts.bold, fontSize: type.base, color: colors.onBrandTertiary },
   controls: { flexDirection: "row", borderTopWidth: 2, borderTopColor: colors.border },
   prevBtn: { width: 72, alignItems: "center", justifyContent: "center", paddingVertical: spacing.lg, borderRightWidth: 2, borderRightColor: colors.border, backgroundColor: colors.surface },
   advanceBtn: { flex: 1, backgroundColor: colors.brand, alignItems: "center", justifyContent: "center", paddingVertical: spacing.lg },

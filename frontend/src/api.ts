@@ -8,6 +8,12 @@ export type Race = {
   order: number;
 };
 
+export type Message = {
+  id: string;
+  text: string;
+  created_at: string;
+};
+
 export type Meet = {
   id: string;
   name: string;
@@ -15,6 +21,7 @@ export type Meet = {
   passcode?: string;
   races: Race[];
   current_index: number;
+  messages: Message[];
   created_at: string;
 };
 
@@ -41,6 +48,15 @@ export async function createMeet(name: string, passcode: string, events_text: st
 
 export async function getMeet(code: string): Promise<Meet> {
   const res = await fetch(`${BASE}/meets/${code.toUpperCase()}`);
+  return handle(res);
+}
+
+export async function sendMessage(id: string, passcode: string, text: string): Promise<Meet> {
+  const res = await fetch(`${BASE}/meets/${id}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ passcode, text }),
+  });
   return handle(res);
 }
 

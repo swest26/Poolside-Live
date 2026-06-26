@@ -71,8 +71,9 @@ export default function Organizer() {
           </Pressable>
 
           <View style={styles.divider}>
-            <Text style={styles.dividerText}>OR MANAGE EXISTING</Text>
+            <Text style={styles.dividerText}>OR REOPEN AN EXISTING MEET</Text>
           </View>
+          <Text style={styles.hint}>Use the 6-character code shown on your meet&apos;s control panel after you created it.</Text>
 
           <Text style={styles.label}>MEET CODE</Text>
           <TextInput

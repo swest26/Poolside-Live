@@ -35,6 +35,12 @@ class Race(BaseModel):
     order: int
 
 
+class Message(BaseModel):
+    id: str = Field(default_factory=lambda: str(uuid.uuid4()))
+    text: str
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+
+
 class Meet(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     name: str
@@ -42,6 +48,7 @@ class Meet(BaseModel):
     passcode: str
     races: List[Race] = []
     current_index: int = 0
+    messages: List[Message] = []
     created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
@@ -63,6 +70,11 @@ class EventsUpdate(BaseModel):
 class IndexBody(BaseModel):
     passcode: str
     index: int
+
+
+class MessageBody(BaseModel):
+    passcode: str
+    text: str
 
 
 # ---------- Helpers ----------
@@ -233,6 +245,21 @@ async def update_events(meet_id: str, body: EventsUpdate):
     )
     meet.races = races
     meet.current_index = 0
+    return meet.model_dump()
+
+
+@api_router.post("/meets/{meet_id}/messages")
+async def add_message(meet_id: str, body: MessageBody):
+    meet = await get_meet_by_id_or_404(meet_id)
+    if body.passcode.strip() != meet.passcode:
+        raise HTTPException(status_code=401, detail="Incorrect passcode")
+    if not body.text.strip():
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+    msg = Message(text=body.text.strip())
+    messages = [msg.model_dump()] + [m.model_dump() for m in meet.messages]
+    messages = messages[:20]  # keep latest 20
+    await db.meets.update_one({"id": meet_id}, {"$set": {"messages": messages}})
+    meet.messages = [Message(**m) for m in messages]
     return meet.model_dump()
 
 

@@ -114,6 +114,18 @@ export default function Live() {
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.onSurface} />}
       >
+        {/* Announcements */}
+        {meet.messages && meet.messages.length > 0 && (
+          <View style={styles.announceWrap} testID="live-announcements">
+            {meet.messages.slice(0, 3).map((m, i) => (
+              <View key={m.id} style={[styles.announce, i === 0 && styles.announceLatest]} testID={`announcement-${m.id}`}>
+                <Ionicons name="megaphone" size={18} color={i === 0 ? colors.onBrand : colors.brand} />
+                <Text style={[styles.announceText, i === 0 && { color: colors.onBrand }]}>{m.text}</Text>
+              </View>
+            ))}
+          </View>
+        )}
+
         {/* Current race */}
         {finished ? (
           <View style={styles.finishedCard}>
@@ -243,6 +255,10 @@ const styles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.onBrand },
   liveText: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.onBrand, letterSpacing: 1 },
   scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
+  announceWrap: { gap: spacing.sm, marginBottom: spacing.lg },
+  announce: { flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 2, borderColor: colors.brand, padding: spacing.md, backgroundColor: colors.brandTertiary },
+  announceLatest: { backgroundColor: colors.brand, borderColor: colors.border },
+  announceText: { flex: 1, fontFamily: fonts.bold, fontSize: type.base, color: colors.onBrandTertiary },
   currentCard: { backgroundColor: colors.inverse, borderWidth: 2, borderColor: colors.border, padding: spacing.lg },
   currentFav: { borderColor: colors.brand, borderWidth: 4 },
   nowRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
