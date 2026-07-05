@@ -1,0 +1,28 @@
+{
+  "summary": "AdMob web-safety regression PASSED. Backend: 26/26 pytest tests pass (unchanged suite in /app/backend/tests/test_meets.py). Frontend (mobile 375x667): (1) /live?code=Q928K3 renders fully on web with NO crash/red-screen — current-race-card, 2 next-race rows, 3 schedule-row-* rows, LIVE badge, CODE Q928K3, UP NEXT + FULL SCHEDULE all visible; the admob-banner testID is absent (count = 0) confirming the AdMobBanner.web.tsx stub is being resolved by Metro instead of the native module. (2) Control panel /control?id=d7ff6a59-12a0-49e8-b154-f25409ebfdf6&passcode=swim123 also has admob-banner count = 0 (never imports it, correct). ADVANCE moved race 1→2, PREVIOUS returned to 1, live-viewers testID shows '1 WATCHING NOW', COPY LINK toggles to 'COPIED!'. (3) Regression on live board: 3 announcements render, dismiss-announcement-{id} removes one (3→2), fav-{id} toggle turns current race into 'YOUR FAVORITE IS RACING' state. Heartbeat continues firing (backend confirms 1+ viewer). No page errors, no 'Unable to resolve' bundle errors, no red screen. Pre-existing SafeAreaView deprecation warning still present (non-blocking, carried from earlier iterations).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "SafeAreaView (react-native core)", "issue": "Pre-existing (non-blocking) deprecation warning. Reference: /app/frontend/app/live.tsx:7 and /app/frontend/app/control.tsx:7. Recommend migrating to react-native-safe-area-context."}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_meets.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "AdMobBanner.web.tsx correctly returns null so Metro's web bundle never touches react-native-google-mobile-ads — verified: no bundle error, admob-banner testID absent on web.",
+    "live.tsx imports AdMobBanner via '@/src/components/AdMobBanner' and renders <AdMobBanner /> after </ScrollView>; on web the .web.tsx stub resolves and renders null — verified.",
+    "control.tsx does NOT import AdMobBanner (grep confirmed) — matches spec that banner shows only on parent live board.",
+    "server.py public_meet() correctly strips passcode from GET /api/meets/{code} and GET /api/meets/id/{id}/read (26/26 backend tests confirm).",
+    "AdMobBanner.tsx uses Constants.executionEnvironment === ExecutionEnvironment.StoreClient to guard against Expo Go — sound approach; native prod build path will still initialize mobileAds()."
+  ],
+  "updated_files": ["/app/test_reports/iteration_4.json", "/app/test_reports/pytest/pytest_results.xml (regenerated)"],
+  "success_rate": {"backend": "100% (26/26 pytest)", "frontend": "100% of tested web flows (live board loads, admob absent on web, advance/previous, live-viewers, copy link, announcements + dismiss, favorite toggle)"},
+  "seed_data_creation": "Reused meet Q928K3 (id d7ff6a59-12a0-49e8-b154-f25409ebfdf6, passcode swim123). No new persistent data.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "AdMob banner will NOT show on web/preview by design — the AdMobBanner.web.tsx stub returns null. To validate on native, a dev/prod build is required (out of scope here). To re-run: `export EXPO_PUBLIC_BACKEND_URL=https://pool-event-board.preview.emergentagent.com && pytest /app/backend/tests/test_meets.py -v` (26 pass). Sample credentials unchanged: code Q928K3, id d7ff6a59-12a0-49e8-b154-f25409ebfdf6, passcode swim123.",
+  "rca_of_issue": "N/A — no bugs found. The previously-reported Metro bundle crash caused by importing react-native-google-mobile-ads on web is resolved by /app/frontend/src/components/AdMobBanner.web.tsx returning null; Metro's platform-specific resolver picks the .web.tsx variant for web builds so the native module is never referenced."
+}

@@ -14,6 +14,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, fonts, type } from "@/src/theme";
 import { getMeet, heartbeat, Meet, Race } from "@/src/api";
 import { storage } from "@/src/utils/storage";
+import AdMobBanner from "@/src/components/AdMobBanner";
 
 export default function Live() {
   const router = useRouter();
@@ -145,6 +146,7 @@ export default function Live() {
       </View>
 
       <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.scroll}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load(); }} tintColor={colors.onSurface} />}
       >
@@ -269,6 +271,7 @@ export default function Live() {
         })}
         <View style={{ height: spacing.xxl }} />
       </ScrollView>
+      <AdMobBanner />
     </SafeAreaView>
   );
 }
@@ -294,6 +297,7 @@ const styles = StyleSheet.create({
   liveDot: { flexDirection: "row", alignItems: "center", gap: spacing.xs, backgroundColor: colors.brand, paddingHorizontal: spacing.sm, paddingVertical: spacing.xs },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.onBrand },
   liveText: { fontFamily: fonts.bold, fontSize: type.sm, color: colors.onBrand, letterSpacing: 1 },
+  scrollView: { flex: 1 },
   scroll: { paddingHorizontal: spacing.lg, paddingTop: spacing.lg },
   announceWrap: { gap: spacing.sm, marginBottom: spacing.lg },
   announce: { flexDirection: "row", alignItems: "center", gap: spacing.sm, borderWidth: 2, borderColor: colors.brand, padding: spacing.md, backgroundColor: colors.brandTertiary },

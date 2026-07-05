@@ -12,7 +12,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSCameraUsageDescription": "Scan a QR code to join your swim meet"
-      }
+      },
+      "bundleIdentifier": "com.emergent.pooleventboard.ejl9t8"
     },
     "android": {
       "adaptiveIcon": {
@@ -20,7 +21,10 @@
         "backgroundColor": "#000"
       },
       "edgeToEdgeEnabled": true,
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA"
+      ],
+      "package": "com.emergent.pooleventboard.ejl9t8"
     },
     "web": {
       "bundler": "metro",
@@ -29,6 +33,13 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "react-native-google-mobile-ads",
+        {
+          "androidAppId": "ca-app-pub-3940256099942544~3347511713",
+          "iosAppId": "ca-app-pub-3940256099942544~1458002511"
+        }
+      ],
       [
         "expo-camera",
         {
