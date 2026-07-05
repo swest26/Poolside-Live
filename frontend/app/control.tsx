@@ -9,6 +9,7 @@ import {
   ActivityIndicator,
   Share,
   TextInput,
+  Platform,
 } from "react-native";
 import { useRouter, useLocalSearchParams, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -29,7 +30,15 @@ export default function Control() {
   const [sending, setSending] = useState(false);
   const [copied, setCopied] = useState(false);
 
-  const shareLink = (code: string) => `${process.env.EXPO_PUBLIC_BACKEND_URL}/live?code=${code}`;
+  const shareLink = (code: string) => {
+    // On web, use the actual origin so the shared link works across preview,
+    // production and custom domains. On native, fall back to the configured URL.
+    const base =
+      Platform.OS === "web" && typeof window !== "undefined"
+        ? window.location.origin
+        : process.env.EXPO_PUBLIC_BACKEND_URL;
+    return `${base}/live?code=${code}`;
+  };
 
   const onSendMessage = async () => {
     if (!meet || !msgText.trim() || sending) return;
