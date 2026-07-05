@@ -1,0 +1,28 @@
+{
+  "summary": "AdMob/Expo-Go crash BUG FIX re-verified — no uncaught errors and no 'Unmatched Route' on the parent live board. Backend 26/26 pytest pass (unchanged suite /app/backend/tests/test_meets.py). Frontend (mobile 375x667): (1) Full manual-code flow Home -> HAVE A CODE? ENTER IT MANUALLY -> type QG8AGQ -> GO TO MEET routes to /live?code=QG8AGQ and renders current-race-card, live-back, LIVE badge, and 4 schedule-row-* rows for the 4-race meet. No 'Unmatched Route' text, no 'missing default export' text, no page/JS errors. (2) Direct URL /live?code=QG8AGQ also loads cleanly. (3) Invalid codes: 'ABC' and 'ZZZZZZ' both show inline testID=scan-error 'Meet not found' and the app stays on the join screen (url does not change to /live). (4) Web safety: admob-banner testID count = 0 on both /live and /control — AdMobBanner.web.tsx stub is being resolved by Metro instead of the native module, confirming Expo Go/web can never touch react-native-google-mobile-ads. (5) Regression: fav-{id} favorite toggle works on live board; announcements list currently 0 on this meet (they were dismissed in a prior run and persist via storage — expected). (6) Control panel /control?id=d7ff6a59-12a0-49e8-b154-f25409ebfdf6&passcode=swim123: advance & previous buttons both fire, live-viewers testID renders, copy-link-button toggles to 'COPIED!'. Only console noise = two benign 404s for static assets (favicon-class), unrelated to the fix.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [],
+    "react_native_issues": [
+      {"component": "SafeAreaView (react-native core)", "issue": "Pre-existing (non-blocking) deprecation warning — recommend migrating to react-native-safe-area-context. Reference: /app/frontend/app/live.tsx:7, /app/frontend/app/control.tsx:7"}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_meets.py", "/app/test_reports/pytest/pytest_results.xml"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "AdMobBanner.tsx correctly guards with Constants.executionEnvironment === ExecutionEnvironment.StoreClient AND uses require() (not top-level import) so react-native-google-mobile-ads is only touched in a real dev/prod native build — this addresses the exact Expo Go crash root cause described in the report.",
+    "AdMobBanner.web.tsx returns null and Metro's platform-specific resolver picks it for web — verified by admob-banner testID count = 0 on /live and /control.",
+    "live.tsx imports the wrapper via '@/src/components/AdMobBanner' and renders <AdMobBanner /> after </ScrollView>; both web (stub) and Expo Go (null via runtime guard) render cleanly.",
+    "server.py public_meet() strips passcode on GET /api/meets/{code} and GET /api/meets/id/{id}/read — confirmed by 26/26 backend tests including no-passcode-leak assertions.",
+    "scan.tsx resolveCode correctly surfaces 'Meet not found' from getMeet() and does NOT navigate on error — verified with ABC and ZZZZZZ inputs."
+  ],
+  "updated_files": ["/app/test_reports/iteration_5.json", "/app/test_reports/pytest/pytest_results.xml (regenerated)"],
+  "success_rate": {"backend": "100% (26/26 pytest)", "frontend": "100% of tested web flows (home, manual code entry, valid+invalid codes, /live direct URL, control advance/previous/copy-link/live-viewers, admob-banner absent on web)"},
+  "seed_data_creation": "Reused existing meets QG8AGQ (4 races) and Q928K3 / id d7ff6a59-12a0-49e8-b154-f25409ebfdf6 (passcode swim123). No new persistent data created.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "AdMob banner will NOT show on web/preview by design — AdMobBanner.web.tsx returns null; native visual banner can only be validated in a dev/prod native build (out of scope in this env). Backend rerun: `export EXPO_PUBLIC_BACKEND_URL=https://pool-event-board.preview.emergentagent.com && pytest /app/backend/tests/test_meets.py -v` (26 pass, ~6s). Sample meets: QG8AGQ (Summer invite, 4 races), Q928K3 (Demo Meet, 3 races, id d7ff6a59-12a0-49e8-b154-f25409ebfdf6, passcode swim123). Note: announcements on Q928K3 were dismissed in a prior test run and dismissed state persists in AsyncStorage/localStorage — if next agent needs to see announcements, either send new ones via /control's SEND ANNOUNCEMENT box or clear localStorage keys 'dismissed_Q928K3' / 'dismissed_QG8AGQ'.",
+  "rca_of_issue": "N/A — bug already fixed. Original RCA (from problem statement): app/live.tsx imported src/components/AdMobBanner which had a top-level `import from 'react-native-google-mobile-ads'`; in Expo Go the native module doesn't exist, so evaluating the module crashed the /live screen (uncaught error) and expo-router then surfaced 'Unmatched Route'. FIX (verified): AdMobBanner.tsx now (a) reads Constants.executionEnvironment and returns null when isExpoGo, (b) uses require() inside useEffect + the render function so the SDK is lazy-loaded only on non-Expo-Go native, and (c) AdMobBanner.web.tsx provides a platform-specific stub so Metro never bundles the native SDK for web. Verified: /live loads cleanly on web with no unmatched route, no red screen, no page errors; admob-banner testID count = 0."
+}
